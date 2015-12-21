@@ -14,3 +14,11 @@
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('createroom', array('uses' => 'APIController@createroom', 'middleware' => 'csrf'));
+
+
+
+
+
+
+
