@@ -14,12 +14,15 @@
 Route::get('/', function () {
     return view('welcome');
 });
-Route::post('createroom', 'APIController@createroom'); //WHY THE ACTUAL FUCK IS THIS NOT WORKING HELP
+Route::post('api/create_room', 'APIController@create_room'); //WHY THE ACTUAL FUCK IS THIS NOT WORKING HELP
 //gives token mismatch error and i have no idea what this is google didnt help wtf kill me
 
 
-
-
-
+Route::post('api/join_room', 'APIController@join_room');
+Route::post('api/leave_room', 'APIController@leave_room');
+Route::post('api/make_move', 'APIController@make_move');
+Route::post('api/get_current_board', 'APIController@get_current_board');
+Route::post('api/create_room', 'APIController@create_room');
+Route::post('api/delete_room', 'APIController@delete_room');
 
 
