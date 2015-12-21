@@ -14,7 +14,8 @@
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('createroom', array('uses' => 'APIController@createroom', 'middleware' => 'csrf'));
+Route::post('createroom', 'APIController@createroom'); //WHY THE ACTUAL FUCK IS THIS NOT WORKING HELP
+//gives token mismatch error and i have no idea what this is google didnt help wtf kill me
 
 
 

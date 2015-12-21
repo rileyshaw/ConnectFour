@@ -15,6 +15,6 @@ class APIController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function createroom(){
-
+        return 1;
     }
 }
