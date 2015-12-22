@@ -3,11 +3,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Input;
 use DB;
-use \Firebase\JWT\JWT;
-use Mockery\CountValidator\Exception;
 use Validator;
 use Hash;
 use JWTAuth;
@@ -28,7 +25,7 @@ class APIController extends Controller
      * @param Request
      * @return \Illuminate\Http\Response
      */
-    public function postRegister(Request $request)
+    public function createUser(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:users|max:127',
@@ -55,7 +52,7 @@ class APIController extends Controller
      * @param Request
      * @return \Illuminate\Http\Response
      */
-    public function postLogin(Request $request) {
+    public function authenticateUser(Request $request) {
         $credentials = $request->only('name', 'password');
         $validator = Validator::make($credentials, [
             'name' => 'required|max:127',

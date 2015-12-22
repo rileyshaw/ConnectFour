@@ -23,5 +23,5 @@ Route::post('api/create_room', 'APIController@create_room');
 Route::post('api/delete_room', 'APIController@delete_room');
 
 
-Route::post('api/login', 'APIController@postLogin');
-Route::post('api/register', 'APIController@postRegister');
+Route::post('api/authenticate', 'APIController@authenticateUser');
+Route::post('api/register', 'APIController@createUser');
