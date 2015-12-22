@@ -15,9 +15,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
-
-
 Route::post('api/join_room', 'APIController@join_room');
 Route::post('api/leave_room', 'APIController@leave_room');
 Route::post('api/make_move', 'APIController@make_move');

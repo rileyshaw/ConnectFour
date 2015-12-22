@@ -8,126 +8,83 @@ use Input;
 use DB;
 use \Firebase\JWT\JWT;
 use Mockery\CountValidator\Exception;
-
+use Validator;
+use Hash;
+use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class APIController extends Controller
 {
+    public function __construct() 
+    {
+       // Apply the jwt.auth middleware to all methods in this controller
+       // except for the authenticate method. We don't want to prevent
+       // the user from retrieving their token if they don't already have it
+       $this->middleware('jwt.auth', ['except' => ['postRegister', 'postLogin', 'verifyToken']]);
+    }
+
+    /**
+     * Registers a user, given a name, unique password, and unique email
+     * @param Request
+     * @return \Illuminate\Http\Response
+     */
+    public function postRegister(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|unique:users|max:127',
+            'password' => 'required|min:6|max:12',
+            'email'    => 'required|email|unique:users',
+        ]);
+
+        if ($validator->fails()) {
+            return $validator->errors()->all();
+        }
+        else {
+            $user = new \App\User;
+            $user->name = $request['name'];
+            $user->password = Hash::make($request['password']);
+            $user->email = $request['email'];
+            $user->save();
+            $token = JWTAuth::fromUser($user, array());
+            return array('success', $token);
+        }
+    }
+
+    /**
+     * Authenticates a user, given a name and password
+     * @param Request
+     * @return \Illuminate\Http\Response
+     */
+    public function postLogin(Request $request) {
+        $credentials = $request->only('name', 'password');
+        $validator = Validator::make($credentials, [
+            'name' => 'required|max:127',
+            'password'   => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $validator->errors()->all();
+        }
+        else {
+            try {
+                // attempt to verify the credentials and create a token for the user
+                if (! $token = JWTAuth::attempt($credentials)) {
+                    return response()->json(['error' => 'invalid_credentials'], 401);
+                }
+            } catch (JWTException $e) {
+                // something went wrong whilst attempting to encode the token
+                return response()->json(['error' => 'could_not_create_token'], 500);
+            }
+            // all good so return the token
+            return response()->json(compact('token'));
+        }
+    }
 
     /**
      * Display a listing of the resource.
-     *
+     * @param Request
      * @return \Illuminate\Http\Response
      */
-    public function postRegister(){
-        $key = "thisisthekey";
-
-
-        $username = Input::get('username');
-        $password =  Input::get('password');
-        if( empty( $username ) ) {
-            return 'Error: Send a valid Username';
-        }
-        if( empty( $password ) ) {
-            return 'Error: Send a valid password';
-        }
-        $usercheck = DB::select('select * from user where name = ?',[$username]);
-        if( empty( $usercheck ) ){
-            DB::insert('insert into user (name, password,currentroom,admin) values (?,?,?,?)', [$username, $password,null,0]);
-
-
-
-            $token = array(
-                "user" => $username,
-                "pass" => $password
-            );
-
-            $jwt = JWT::encode($token, $key);
-
-
-
-            return "Successfully added user\r\nYour user token is " . $jwt . "\r\nSend this with every command. Login with your credentials to receive a new token";
-        }else{
-            return 'Error: Username already exists';
-        }
-    }
-    public function postLogin(){
-        $key = "thisisthekey";
-
-        $username = Input::get('username');
-        $password =  Input::get('password');
-        if( empty( $username ) ) {
-            return 'Error: Send a valid Username';
-        }
-        if( empty( $password ) ) {
-            return 'Error: Send a valid password';
-        }
-        $usercheck = DB::select('select * from user where name = ?',[$username]);
-
-        if( empty( $usercheck ) ){
-            return 'Error: Username does not exists';
-        }else{
-            if(strcmp($usercheck[0]->password,$password) == 0){
-
-                $token = array(
-                    "user" => $username,
-                    "pass" => $password
-                );
-
-                $jwt = JWT::encode($token, $key);
-
-
-
-                return "Successfully logged in\r\nYour user token is " . $jwt . "\r\nSend this with every command. Login with your credentials to receive a new token";
-            }else{
-                return 'Error: Password is incorrect';
-            }
-        }
-    }
-    public function verifyToken(){
-        $key = "thisisthekey";
-        $token = Input::get('token');
-        if( empty( $token ) ){
-            return [false,'wtf'];
-        }
-
-
-
-
-        try{
-            $decoded = JWT::decode($token, $key, array('HS256'));     //TODO: fix the stupid ass exception thrown here when input is invalid
-        }catch(Exception $e){
-            return [false,'here'];
-        }
-        $username = $decoded->user;
-        $password = $decoded->pass;
-
-
-
-
-        $usercheck = DB::select('select * from user where name = ?',[$username]);
-        if( empty( $usercheck ) ){
-            return [false,'how'];
-        }else{
-            if(strcmp($usercheck[0]->password,$password) == 0){
-                return [true,$username];
-            }else{
-                return [false,'wat'];
-            }
-        }
-    }
-
-
-
-
-
-
-
-    public function create_room(){
-        //need to validate the user still
-        if($this->verifyToken()[0] == false){
-            return 'Error: Token invalid, sign in or create an account to receive a valid token';
-        }
-
+    public function create_room(Request $request) {
         $roomname =  Input::get('room_name');
         $games = DB::select('select * from games where name = ?',[$roomname]);
         if(empty($games)){
