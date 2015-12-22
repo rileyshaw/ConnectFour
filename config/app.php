@@ -1,5 +1,8 @@
 <?php
 
+global $key;
+$key = "thisisthekey";
+
 return [
 
     /*
