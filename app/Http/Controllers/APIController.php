@@ -9,6 +9,7 @@ use Validator;
 use Hash;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use \App\Game;
 
 class APIController extends Controller
 {
@@ -17,7 +18,7 @@ class APIController extends Controller
        // Apply the jwt.auth middleware to all methods in this controller
        // except for the authenticate method. We don't want to prevent
        // the user from retrieving their token if they don't already have it
-       $this->middleware('jwt.auth', ['except' => ['createUser', 'authenticateUser', 'verifyToken']]);
+       $this->middleware('jwt.auth', ['except' => ['createUser', 'authenticateUser']]);
     }
 
     /**
@@ -77,25 +78,28 @@ class APIController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Create a room, given the name of the room. Only unique
      * @param Request
      * @return \Illuminate\Http\Response
      */
     public function create_room(Request $request) {
-        $roomname =  Input::get('room_name');
-        $games = DB::select('select * from games where name = ?',[$roomname]);
-        if(empty($games)){
-            DB::insert('insert into games (name, player1,player2,board,nextturn) values (?,?,?,?,?)', [$roomname, null,null,null,1]);
-            return 'Successfully added room';
-        }else{
-            return 'Error, room already exists';
+        // Make sure that the name only has letters and is unique
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|alpha|max:60|unique:games',
+        ]);
+        if ($validator->fails()) {
+            return $validator->errors()->all();
+        }
+        else {
+            // If the name is ok, then create the game
+            $game = new Game;
+            $game->name = $request->input('name');
+            $game->nextturn = 1;
+            $game->save();
+            
+            return response()->json(['success' => 'created_room'], 401);
         }
     }
-
-
-
-
-
 
     public function join_room(){
         if($this->verifyToken()[0] == false){
