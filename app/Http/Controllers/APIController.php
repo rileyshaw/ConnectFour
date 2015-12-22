@@ -32,7 +32,7 @@ class APIController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:users|max:127',
-            'password' => 'required|min:6|max:12',
+            'password' => 'required',
             'email'    => 'required|email|unique:users',
         ]);
 
