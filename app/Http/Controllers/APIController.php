@@ -39,6 +39,7 @@ class APIController extends Controller
         else {
             $user = new \App\User;
             $user->name = $request['name'];
+            $user->admin = 0;
             $user->password = Hash::make($request['password']);
             $user->currentroom = '';
             $user->save();
@@ -93,6 +94,8 @@ class APIController extends Controller
             // If the name is ok, then create the game
             $game = new Game;
             $game->name = $request->input('name');
+            $game->player1 = null;
+            $game->player2 = null;
             $game->nextturn = 1;
             $game->save();
             
