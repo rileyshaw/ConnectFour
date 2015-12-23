@@ -31,7 +31,6 @@ class APIController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|unique:users|max:127',
             'password' => 'required',
-            'email'    => 'required|email|unique:users',
         ]);
 
         if ($validator->fails()) {
@@ -41,7 +40,7 @@ class APIController extends Controller
             $user = new \App\User;
             $user->name = $request['name'];
             $user->password = Hash::make($request['password']);
-            $user->email = $request['email'];
+            $user->currentroom = '';
             $user->save();
             $token = JWTAuth::fromUser($user, array());
             return array('success', $token);
